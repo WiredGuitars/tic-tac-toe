@@ -39,3 +39,8 @@ body {
   border-top: none;
   border-bottom: none;
 }
+#message{
+  text-align: center;
+  margin-top: 20px;
+  font-size: 30px;
+}

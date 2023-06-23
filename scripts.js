@@ -1,6 +1,8 @@
 let gameSpace = ["", "", "", "", "", "", "", "", ""];
 // empty array with 9 spaces to represent our play board
 
+const playComputerButton = document.getElementById("play-ai")
+// select play vs Comp button
 const gameboard = document.querySelector(".gameboard");
 // initializing the gameboard variable
 const resetButton = document.getElementById("reset-button");
@@ -18,7 +20,10 @@ const playerFactory = (number, marker) => {
 
 const player1 = playerFactory(1, "O");
 const player2 = playerFactory(2, "X");
+const computerPlayer = playerFactory(2, "X")
 // establishing our players
+let playAgainstComputer = false
+// default setting for playing vs a computer will be set to false until the button is pressed
 
 let currentPlayer = player1;
 // establishing currentplayer, as a kid I always played with the rule 'O's goes first'
@@ -35,28 +40,28 @@ const checkWinningCondition = () => {
     [2, 4, 6], // Diagonals
   ];
   // winning combos in tic tac toe
+  for (let i = 0; i < winningCombinations.length; i++) {
+    const combination = winningCombinations[i];
+    const a = combination[0];
+    const b = combination[1];
+    const c = combination[2];
 
-  for (const combination of winningCombinations) {
-    const [a, b, c] = combination;
     if (
       gameSpace[a] !== "" &&
       gameSpace[a] === gameSpace[b] &&
       gameSpace[a] === gameSpace[c]
     ) {
       const message = document.getElementById("message");
-      message.textContent = `Player ${currentPlayer.getPlayerNumber()} wins!`;
+      message.textContent =
+        "Player " + currentPlayer.getPlayerNumber() + " wins!";
       gameOver = true;
       return true;
     }
   }
-  // check each winning combination
-  return false;
-  // no winning condition is met
 };
-// factory function for checking the win condition
 
 gameboard.addEventListener("click", function (event) {
-  if (gameOver) {
+  if (gameOver || (!playAgainstComputer && currentPlayer === computerPlayer)) {
     return;
   }
   const clickedElement = event.target;
@@ -71,7 +76,13 @@ gameboard.addEventListener("click", function (event) {
       if (checkWinningCondition()) {
         return;
       }
-      currentPlayer = currentPlayer === player1 ? player2 : player1;
+    
+      if (playAgainstComputer && currentPlayer === player1) {
+        currentPlayer = computerPlayer;
+        makeComputerMove();
+      } else {
+        currentPlayer = currentPlayer === player1 ? player2 : player1;
+      }
     }
   }
 });
@@ -104,3 +115,29 @@ resetButton.addEventListener("click", function () {
 // argument so that we can modify the textcontent of every gamespace to return them to empty strings.
 // I reset the currentPlayer value to player1, because in my day player1 always goes first.
 // also changed gameOver back to false so that the game can be played again
+playComputerButton.addEventListener("click", function () {
+  playAgainstComputer = true;
+  currentPlayer = player1;
+  message.textContent = "Playing against the computer. Your turn!";
+});
+const makeComputerMove = () => {
+  const emptySpaces = gameSpace.reduce((indices, value, index) => {
+    if (value === "") {
+      indices.push(index);
+    }
+    return indices;
+  }, []);
+
+  const randomIndex = Math.floor(Math.random() * emptySpaces.length);
+  const computerMove = emptySpaces[randomIndex];
+
+  gameSpace[computerMove] = computerPlayer.getPlayerMarker();
+  const computerSpace = document.getElementById(`gamespace-${computerMove + 1}`);
+  computerSpace.textContent = computerPlayer.getPlayerMarker();
+
+  if (checkWinningCondition()) {
+    return;
+  }
+
+  currentPlayer = player1;
+};

@@ -1,7 +1,7 @@
 let gameSpace = ["", "", "", "", "", "", "", "", ""];
 // empty array with 9 spaces to represent our play board
 
-const playComputerButton = document.getElementById("play-ai")
+const playComputerButton = document.getElementById("play-ai");
 // select play vs Comp button
 const gameboard = document.querySelector(".gameboard");
 // initializing the gameboard variable
@@ -20,13 +20,38 @@ const playerFactory = (number, marker) => {
 
 const player1 = playerFactory(1, "O");
 const player2 = playerFactory(2, "X");
-const computerPlayer = playerFactory(2, "X")
+const computerPlayer = playerFactory(2, "X");
 // establishing our players
-let playAgainstComputer = false
+let playAgainstComputer = false;
 // default setting for playing vs a computer will be set to false until the button is pressed
 
 let currentPlayer = player1;
 // establishing currentplayer, as a kid I always played with the rule 'O's goes first'
+let computerHasMoved = false;
+
+const makeComputerMove = () => {
+  const emptySpaces = gameSpace.reduce((indices, value, index) => {
+    if (value === "") {
+      indices.push(index);
+    }
+    return indices;
+  }, []);
+
+  const randomIndex = Math.floor(Math.random() * emptySpaces.length);
+  const computerMove = emptySpaces[randomIndex];
+
+  gameSpace[computerMove] = computerPlayer.getPlayerMarker();
+  const computerSpace = document.getElementById(
+    `gamespace-${computerMove + 1}`
+  );
+  computerSpace.textContent = computerPlayer.getPlayerMarker();
+
+  if (checkWinningCondition()) {
+    return;
+  }
+
+  currentPlayer = player1;
+};
 
 const checkWinningCondition = () => {
   const winningCombinations = [
@@ -39,7 +64,9 @@ const checkWinningCondition = () => {
     [0, 4, 8],
     [2, 4, 6], // Diagonals
   ];
-  // winning combos in tic tac toe
+
+  let isTie = true;
+
   for (let i = 0; i < winningCombinations.length; i++) {
     const combination = winningCombinations[i];
     const a = combination[0];
@@ -57,8 +84,22 @@ const checkWinningCondition = () => {
       gameOver = true;
       return true;
     }
+
+    if (gameSpace[a] === "" || gameSpace[b] === "" || gameSpace[c] === "") {
+      isTie = false;
+    }
   }
+
+  if (isTie) {
+    const message = document.getElementById("message");
+    message.textContent = "It's a tie!";
+    gameOver = true;
+    return true;
+  }
+
+  return false;
 };
+
 
 gameboard.addEventListener("click", function (event) {
   if (gameOver || (!playAgainstComputer && currentPlayer === computerPlayer)) {
@@ -76,9 +117,13 @@ gameboard.addEventListener("click", function (event) {
       if (checkWinningCondition()) {
         return;
       }
-    
+
       if (playAgainstComputer && currentPlayer === player1) {
         currentPlayer = computerPlayer;
+        if (!computerHasMoved) {
+          message.textContent = "";
+          computerHasMoved = true;
+        }
         makeComputerMove();
       } else {
         currentPlayer = currentPlayer === player1 ? player2 : player1;
@@ -107,6 +152,7 @@ resetButton.addEventListener("click", function () {
   gameOver = false;
   const message = document.getElementById("message");
   message.textContent = "";
+  computerHasMoved = false
 });
 // EL that listens for a click on resetButton, and simply resets gameSpace back to its original
 // index value, and also initializes a new variable gameSpaces which runs querySelectorAll on
@@ -118,26 +164,31 @@ resetButton.addEventListener("click", function () {
 playComputerButton.addEventListener("click", function () {
   playAgainstComputer = true;
   currentPlayer = player1;
-  message.textContent = "Playing against the computer. Your turn!";
-});
-const makeComputerMove = () => {
-  const emptySpaces = gameSpace.reduce((indices, value, index) => {
-    if (value === "") {
-      indices.push(index);
-    }
-    return indices;
-  }, []);
-
-  const randomIndex = Math.floor(Math.random() * emptySpaces.length);
-  const computerMove = emptySpaces[randomIndex];
-
-  gameSpace[computerMove] = computerPlayer.getPlayerMarker();
-  const computerSpace = document.getElementById(`gamespace-${computerMove + 1}`);
-  computerSpace.textContent = computerPlayer.getPlayerMarker();
-
-  if (checkWinningCondition()) {
-    return;
+  if (message.textContent.trim() !== "Playing against the computer. Your turn!") {
+    message.textContent = "Playing against the computer. Your turn!";
+  } else {
+    message.textContent = "";
   }
+  gameSpace = ["", "", "", "", "", "", "", "", ""];
+  const gameSpaces = document.querySelectorAll(".gamespace");
+  gameSpaces.forEach((space) => {
+    space.textContent = "";
+  });
+  gameOver = false;
+  computerHasMoved = false
+});
 
+
+const playHumanButton = document.getElementById("play-human-button");
+playHumanButton.addEventListener("click", function () {
+  playAgainstComputer = false;
   currentPlayer = player1;
-};
+  computerHasMoved = false;
+  message.textContent = "";
+  gameSpace = ["", "", "", "", "", "", "", "", ""];
+  const gameSpaces = document.querySelectorAll(".gamespace");
+  gameSpaces.forEach((space) => {
+    space.textContent = "";
+  });
+  gameOver = false;
+});

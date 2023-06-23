@@ -9,7 +9,7 @@ const resetButton = document.getElementById("reset-button");
 // initializing the reset button
 let gameOver = false;
 // need a global boolean variable I can easily access for the purposes of making the game
-// inoperable when one player wins until someone hits reset
+// inoperable when one player wins until someone hits reset/playvscomp/playvshuman
 const playerFactory = (number, marker) => {
   const getPlayerNumber = () => number;
   const getPlayerMarker = () => marker;
@@ -24,10 +24,12 @@ const computerPlayer = playerFactory(2, "X");
 // establishing our players
 let playAgainstComputer = false;
 // default setting for playing vs a computer will be set to false until the button is pressed
-
-let currentPlayer = player1;
-// establishing currentplayer, as a kid I always played with the rule 'O's goes first'
 let computerHasMoved = false;
+// see above, same logic
+let currentPlayer = player1;
+// establishing currentplayer, as a kid I always played with the rule 'O's goes first', so 
+// so player1 will be 'O's' and they will go first
+
 
 const makeComputerMove = () => {
   const emptySpaces = gameSpace.reduce((indices, value, index) => {
@@ -52,6 +54,7 @@ const makeComputerMove = () => {
 
   currentPlayer = player1;
 };
+// 
 
 const checkWinningCondition = () => {
   const winningCombinations = [

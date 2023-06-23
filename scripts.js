@@ -146,52 +146,36 @@ gameboard.addEventListener("click", function (event) {
 // and we also change the textContent inside to match. we then change currentplayer from whichever
 // player it was to the other player with a simple ternery operator
 resetButton.addEventListener("click", function () {
-  gameSpace = ["", "", "", "", "", "", "", "", ""];
-  const gameSpaces = document.querySelectorAll(".gamespace");
-  gameSpaces.forEach((space) => {
-    space.textContent = "";
-  });
-  currentPlayer = player1;
-  gameOver = false;
-  const message = document.getElementById("message");
-  message.textContent = "";
-  computerHasMoved = false
+  resetGameState()
 });
-// EL that listens for a click on resetButton, and simply resets gameSpace back to its original
-// index value, and also initializes a new variable gameSpaces which runs querySelectorAll on
-// everything with a class of .gamespace. This is convenient because it puts all of our gamespaces
-// into an index which allows us to run a forEach method on them, passing space through as an
-// argument so that we can modify the textcontent of every gamespace to return them to empty strings.
-// I reset the currentPlayer value to player1, because in my day player1 always goes first.
-// also changed gameOver back to false so that the game can be played again
+
 playComputerButton.addEventListener("click", function () {
   playAgainstComputer = true;
   currentPlayer = player1;
-  if (message.textContent.trim() !== "Playing against the computer. Your turn!") {
+  if (message.textContent !== "Playing against the computer. Your turn!") {
     message.textContent = "Playing against the computer. Your turn!";
   } else {
     message.textContent = "";
   }
-  gameSpace = ["", "", "", "", "", "", "", "", ""];
-  const gameSpaces = document.querySelectorAll(".gamespace");
-  gameSpaces.forEach((space) => {
-    space.textContent = "";
-  });
-  gameOver = false;
-  computerHasMoved = false
+  resetGameState()
 });
 
 
 const playHumanButton = document.getElementById("play-human-button");
 playHumanButton.addEventListener("click", function () {
   playAgainstComputer = false;
-  currentPlayer = player1;
   computerHasMoved = false;
   message.textContent = "";
+  resetGameState()
+});
+
+const resetGameState = () => {
+  currentPlayer = player1;
   gameSpace = ["", "", "", "", "", "", "", "", ""];
   const gameSpaces = document.querySelectorAll(".gamespace");
   gameSpaces.forEach((space) => {
     space.textContent = "";
   });
   gameOver = false;
-});
+  computerHasMoved = false;
+};

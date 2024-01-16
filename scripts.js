@@ -1,6 +1,7 @@
 let gameSpace = ["", "", "", "", "", "", "", "", ""];
 // empty array with 9 spaces to represent our play board
-
+const playImpossibleButton = document.getElementById("play-impossible-button");
+// select impossible computer button
 const playComputerButton = document.getElementById("play-ai");
 // select play vs Comp button
 const gameboard = document.querySelector(".gameboard");
@@ -8,6 +9,7 @@ const gameboard = document.querySelector(".gameboard");
 const resetButton = document.getElementById("reset-button");
 // initializing the reset button
 let gameOver = false;
+let impossibleMode = false;
 // need a global boolean variable I can easily access for the purposes of making the game
 // inoperable when one player wins until someone hits reset/playvscomp/playvshuman
 const playerFactory = (number, marker) => {
@@ -17,7 +19,6 @@ const playerFactory = (number, marker) => {
   return { getPlayerNumber, getPlayerMarker };
 };
 // player creator factory function
-
 const player1 = playerFactory(1, "O");
 const player2 = playerFactory(2, "X");
 const computerPlayer = playerFactory(2, "X");
@@ -27,34 +28,96 @@ let playAgainstComputer = false;
 let computerHasMoved = false;
 // see above, same logic
 let currentPlayer = player1;
-// establishing currentplayer, as a kid I always played with the rule 'O's goes first', so 
+// establishing currentplayer, as a kid I always played with the rule 'O's goes first', so
 // so player1 will be 'O's' and they will go first
 
-
 const makeComputerMove = () => {
-  const emptySpaces = gameSpace.reduce((indices, value, index) => {
-    if (value === "") {
-      indices.push(index);
+  if (playAgainstComputer && currentPlayer === computerPlayer) {
+    if (impossibleMode) {
+      const bestMove = minimax(gameSpace, true);
+      gameSpace[bestMove] = computerPlayer.getPlayerMarker();
+
+      const computerSpace = document.getElementById(
+        `gamespace-${bestMove + 1}`
+      );
+      computerSpace.textContent = computerPlayer.getPlayerMarker();
+
+      if (checkWinningCondition()) {
+        return;
+      }
+    } else {
+      // Existing logic for easy computer move
+      const availableMoves = getAvailableMoves(gameSpace)
+
+      const randomIndex = Math.floor(Math.random() * availableMoves.length);
+      const computerMove = availableMoves[randomIndex];
+
+      gameSpace[computerMove] = computerPlayer.getPlayerMarker();
+      const computerSpace = document.getElementById(
+        `gamespace-${computerMove + 1}`
+      );
+      computerSpace.textContent = computerPlayer.getPlayerMarker();
+
+      if (checkWinningCondition()) {
+        return;
+      }
     }
-    return indices;
-  }, []);
 
-  const randomIndex = Math.floor(Math.random() * emptySpaces.length);
-  const computerMove = emptySpaces[randomIndex];
+    currentPlayer = player1;
+  }
+};
+const minimax = (board, maximizingPlayer) => {
+  const availableMoves = getAvailableMoves(board);
 
-  gameSpace[computerMove] = computerPlayer.getPlayerMarker();
-  const computerSpace = document.getElementById(
-    `gamespace-${computerMove + 1}`
-  );
-  computerSpace.textContent = computerPlayer.getPlayerMarker();
-
-  if (checkWinningCondition()) {
-    return;
+  if (checkWinningCondition(board, player1)) {
+    return -10;
+  } else if (checkWinningCondition(board, player2)) {
+    return 10;
+  } else if (availableMoves.length === 0) {
+    return 0;
   }
 
-  currentPlayer = player1;
+  if (maximizingPlayer) {
+    let maxEval = -Infinity;
+    let bestMove;
+  
+    for (const move of availableMoves) {
+      const newBoard = [...board];
+      newBoard[move] = player2.getPlayerMarker();
+      const eval = minimax(newBoard, false);
+  
+      if (eval > maxEval) {
+        maxEval = eval;
+        bestMove = move; 
+        console.log(bestMove);
+        console.log(maxEval)
+      }
+      console.log(bestMove);
+      console.log(maxEval)
+    }
+    console.log(bestMove);
+    console.log(maxEval)
+    
+    console.log(bestMove);
+    return bestMove; // Return the bestMove
+  }
+  
+
+  }
+
+
+
+
+
+const getAvailableMoves = (board) => {
+  return board.reduce((moves, value, index) => {
+    if (value === "") {
+      moves.push(index);
+    }
+    return moves;
+  }, []);
 };
-// 
+
 
 const checkWinningCondition = () => {
   const winningCombinations = [
@@ -86,7 +149,7 @@ const checkWinningCondition = () => {
         "Player " + currentPlayer.getPlayerNumber() + " wins!";
       gameOver = true;
       return true;
-    }
+    }gameboard
 
     if (gameSpace[a] === "" || gameSpace[b] === "" || gameSpace[c] === "") {
       isTie = false;
@@ -103,9 +166,8 @@ const checkWinningCondition = () => {
   return false;
 };
 
-
 gameboard.addEventListener("click", function (event) {
-  if (gameOver || (!playAgainstComputer && currentPlayer === computerPlayer)) {
+  if (gameOver) {
     return;
   }
   const clickedElement = event.target;
@@ -114,8 +176,6 @@ gameboard.addEventListener("click", function (event) {
     if (gameSpace[index] === "") {
       gameSpace[index] = currentPlayer.getPlayerMarker();
       clickedElement.textContent = currentPlayer.getPlayerMarker();
-      console.log("Clicked gamespace:", clickedElement.id);
-      console.log("Game board state:", gameSpace);
 
       if (checkWinningCondition()) {
         return;
@@ -146,27 +206,35 @@ gameboard.addEventListener("click", function (event) {
 // and we also change the textContent inside to match. we then change currentplayer from whichever
 // player it was to the other player with a simple ternery operator
 resetButton.addEventListener("click", function () {
-  resetGameState()
+  resetGameState();
+});
+
+playImpossibleButton.addEventListener("click", function () {
+  playAgainstComputer = true;
+  impossibleMode = true; // Toggle the impossibleMode
+  currentPlayer = player1;
+  message.textContent = "You've entered the lion's den, good luck!";
+  resetGameState();
 });
 
 playComputerButton.addEventListener("click", function () {
   playAgainstComputer = true;
+  impossibleMode = false
   currentPlayer = player1;
   if (message.textContent !== "Playing against the computer. Your turn!") {
     message.textContent = "Playing against the computer. Your turn!";
   } else {
     message.textContent = "";
   }
-  resetGameState()
+  resetGameState();
 });
-
 
 const playHumanButton = document.getElementById("play-human-button");
 playHumanButton.addEventListener("click", function () {
   playAgainstComputer = false;
   computerHasMoved = false;
   message.textContent = "";
-  resetGameState()
+  resetGameState();
 });
 
 const resetGameState = () => {

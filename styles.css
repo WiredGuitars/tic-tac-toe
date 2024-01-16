@@ -1,5 +1,5 @@
 body {
-  background-color: rgb(146, 146, 106);
+  background-color: limegreen;
 }
 
 .gameboard {
@@ -39,7 +39,7 @@ body {
   border-top: none;
   border-bottom: none;
 }
-#message{
+#message {
   text-align: center;
   margin-top: 20px;
   font-size: 30px;

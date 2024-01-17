@@ -83,9 +83,11 @@ const makeComputerMove = () => {
 };
 
 const minimax = (board, depth, isMaximizing) => {
+  // function for finding the best possible move for the computer, takes current board-state, 'depth' which is a measurement of how many moves ahead it should predict, and boolean variable 'isMaxmimizing' which lets it alternate perspectives during recursion 
   const winner = checkWinningCondition(board, computerPlayer);
+  // check if there is a winner
   const availableMoves = getAvailableMoves(board);
-
+// get assign available moves to a new variable (as an array of empty strings)
   if (winner === 1) {
     return 100 - depth; // Adjust the score based on depth
   } else if (winner === -1) {
@@ -93,26 +95,30 @@ const minimax = (board, depth, isMaximizing) => {
   } else if (availableMoves.length === 0) {
     return 0;
   }
-
+// conditional chain that allots points based on move-quality and depth. This is used primarily during the recursion portion.
   if (isMaximizing) {
-    let bestScore = -Infinity;
-    let bestMove = -1;
+// check to see if we're maximizing for the computer's move, this alternates every time through the loop as you'll see ahead
 
+    let bestScore = -Infinity;
+    let bestMove;
+    // initialize a very large negative number and bestMove (which defaults to null but immediately changes in the following loop)
     for (const move of availableMoves) {
       const newBoard = [...board];
-      newBoard[move] = "X"; // Assuming computer always plays with 'X'
-      let score = minimax(newBoard, depth + 1, false); // Switch to minimizing
+      // initialize a for loop iterating over the availableMoves array, and creating a shallow copy of said board to manipulate
+      newBoard[move] = "X"; // try a move, for example; input "X" for the first available move from availableMoves (i.e. newBoard[0]). 'X' because the comp always plays with "X"
+      let score = minimax(newBoard, depth + 1, false); // establish a new score variable which will start the recursion loop, and switch to minimizing
 
       if (score > bestScore) {
         bestScore = score;
         bestMove = move;
       }
+      // check that runs after all moves in the current 
     }
 
     return depth === 0 ? bestMove : bestScore;
   } else {
     let bestScore = Infinity;
-    let bestMove = -1;
+    let bestMove
 
     for (const move of availableMoves) {
       const newBoard = [...board];
@@ -162,9 +168,9 @@ const checkWinningCondition = (gameSpace, currentPlayer) => {
       gameSpace[a] === gameSpace[c]
     ) {
       if (gameSpace[a] === currentPlayer.getPlayerMarker()) {
-        return 1; // Indicate that the current player wins
+        return 1; // Indicate that the current player wins, but pass it as a number for minimax
       } else {
-        return -1; // Indicate that the opponent wins
+        return -1; // Indicate that the opponent wins, returning -1 for same reason as returning 1
       }
     }
   }

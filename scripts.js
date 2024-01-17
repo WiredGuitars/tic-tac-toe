@@ -7,21 +7,23 @@ const playComputerButton = document.getElementById("play-ai");
 const gameboard = document.querySelector(".gameboard");
 // initializing the gameboard variable
 const resetButton = document.getElementById("reset-button");
+const message = document.getElementById("message");
+
 // initializing the reset button
 let gameOver = false;
 let impossibleMode = false;
 // need a global boolean variable I can easily access for the purposes of making the game
 // inoperable when one player wins until someone hits reset/playvscomp/playvshuman
-const playerFactory = (number, marker) => {
-  const getPlayerNumber = () => number;
+const playerFactory = (string, marker) => {
+  const getPlayerNumber = () => string;
   const getPlayerMarker = () => marker;
 
   return { getPlayerNumber, getPlayerMarker };
 };
 // player creator factory function
-const player1 = playerFactory(1, "O");
-const player2 = playerFactory(2, "X");
-const computerPlayer = playerFactory(2, "X");
+const player1 = playerFactory("1", "O");
+const player2 = playerFactory("2", "X");
+const computerPlayer = playerFactory("computer", "X");
 // establishing our players
 let playAgainstComputer = false;
 // default setting for playing vs a computer will be set to false until the button is pressed
@@ -33,22 +35,32 @@ let currentPlayer = player1;
 
 const makeComputerMove = () => {
   if (playAgainstComputer && currentPlayer === computerPlayer) {
+    if (checkTie() === true) {
+      gameOver = true;
+      return;
+    }
     if (impossibleMode) {
-      const bestMove = minimax(gameSpace, true);
-      gameSpace[bestMove] = computerPlayer.getPlayerMarker();
+      const bestMove = minimax(gameSpace, 0, true);
 
+      gameSpace[bestMove] = computerPlayer.getPlayerMarker();
       const computerSpace = document.getElementById(
         `gamespace-${bestMove + 1}`
       );
-      computerSpace.textContent = computerPlayer.getPlayerMarker();
 
-      if (checkWinningCondition()) {
+      if (computerSpace) {
+        computerSpace.textContent = computerPlayer.getPlayerMarker();
+      } else {
+        console.error("Computer Space is null or undefined");
+      }
+
+      if (checkWinningCondition(gameSpace, computerPlayer) === 1) {
+        message.textContent = "The computer has won!";
+        gameOver = true;
         return;
       }
     } else {
       // Existing logic for easy computer move
-      const availableMoves = getAvailableMoves(gameSpace)
-
+      const availableMoves = getAvailableMoves(gameSpace);
       const randomIndex = Math.floor(Math.random() * availableMoves.length);
       const computerMove = availableMoves[randomIndex];
 
@@ -57,57 +69,65 @@ const makeComputerMove = () => {
         `gamespace-${computerMove + 1}`
       );
       computerSpace.textContent = computerPlayer.getPlayerMarker();
+      checkTie();
 
-      if (checkWinningCondition()) {
+      if (checkWinningCondition(gameSpace, computerPlayer) === 1) {
+        message.textContent = "The computer has won!";
+        gameOver = true;
         return;
       }
     }
-
-    currentPlayer = player1;
   }
+
+  currentPlayer = player1;
 };
-const minimax = (board, maximizingPlayer) => {
+
+const minimax = (board, depth, isMaximizing) => {
+  const winner = checkWinningCondition(board, computerPlayer);
   const availableMoves = getAvailableMoves(board);
 
-  if (checkWinningCondition(board, player1)) {
-    return -10;
-  } else if (checkWinningCondition(board, player2)) {
-    return 10;
+  if (winner === 1) {
+    return 100 - depth; // Adjust the score based on depth
+  } else if (winner === -1) {
+    return depth - 100; // Adjust the score based on depth
   } else if (availableMoves.length === 0) {
     return 0;
   }
 
-  if (maximizingPlayer) {
-    let maxEval = -Infinity;
-    let bestMove;
-  
+  if (isMaximizing) {
+    let bestScore = -Infinity;
+    let bestMove = -1;
+
     for (const move of availableMoves) {
       const newBoard = [...board];
-      newBoard[move] = player2.getPlayerMarker();
-      const eval = minimax(newBoard, false);
-  
-      if (eval > maxEval) {
-        maxEval = eval;
-        bestMove = move; 
-        console.log(bestMove);
-        console.log(maxEval)
+      newBoard[move] = "X"; // Assuming computer always plays with 'X'
+      let score = minimax(newBoard, depth + 1, false); // Switch to minimizing
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = move;
       }
-      console.log(bestMove);
-      console.log(maxEval)
     }
-    console.log(bestMove);
-    console.log(maxEval)
-    
-    console.log(bestMove);
-    return bestMove; // Return the bestMove
+
+    return depth === 0 ? bestMove : bestScore;
+  } else {
+    let bestScore = Infinity;
+    let bestMove = -1;
+
+    for (const move of availableMoves) {
+      const newBoard = [...board];
+      newBoard[move] = "O"; // Assuming player always plays with 'O'
+      let score = minimax(newBoard, depth + 1, true); // Switch to maximizing
+
+      if (score < bestScore) {
+        bestScore = score;
+        bestMove = move;
+      }
+    }
+
+    return depth === 0 ? bestMove : bestScore;
   }
-  
-
-  }
-
-
-
-
+};
 
 const getAvailableMoves = (board) => {
   return board.reduce((moves, value, index) => {
@@ -118,8 +138,7 @@ const getAvailableMoves = (board) => {
   }, []);
 };
 
-
-const checkWinningCondition = () => {
+const checkWinningCondition = (gameSpace, currentPlayer) => {
   const winningCombinations = [
     [0, 1, 2],
     [3, 4, 5],
@@ -130,8 +149,6 @@ const checkWinningCondition = () => {
     [0, 4, 8],
     [2, 4, 6], // Diagonals
   ];
-
-  let isTie = true;
 
   for (let i = 0; i < winningCombinations.length; i++) {
     const combination = winningCombinations[i];
@@ -144,26 +161,15 @@ const checkWinningCondition = () => {
       gameSpace[a] === gameSpace[b] &&
       gameSpace[a] === gameSpace[c]
     ) {
-      const message = document.getElementById("message");
-      message.textContent =
-        "Player " + currentPlayer.getPlayerNumber() + " wins!";
-      gameOver = true;
-      return true;
-    }gameboard
-
-    if (gameSpace[a] === "" || gameSpace[b] === "" || gameSpace[c] === "") {
-      isTie = false;
+      if (gameSpace[a] === currentPlayer.getPlayerMarker()) {
+        return 1; // Indicate that the current player wins
+      } else {
+        return -1; // Indicate that the opponent wins
+      }
     }
   }
 
-  if (isTie) {
-    const message = document.getElementById("message");
-    message.textContent = "It's a tie!";
-    gameOver = true;
-    return true;
-  }
-
-  return false;
+  return 0; // No winning condition found
 };
 
 gameboard.addEventListener("click", function (event) {
@@ -171,29 +177,36 @@ gameboard.addEventListener("click", function (event) {
     return;
   }
   const clickedElement = event.target;
-  if (clickedElement.classList.contains("gamespace")) {
-    const index = Number(clickedElement.id.split("-")[1]) - 1;
-    if (gameSpace[index] === "") {
-      gameSpace[index] = currentPlayer.getPlayerMarker();
-      clickedElement.textContent = currentPlayer.getPlayerMarker();
+  const index = clickedElement.id.split("-")[1] - 1;
 
-      if (checkWinningCondition()) {
-        return;
-      }
+  if (gameSpace[index] === "") {
+    gameSpace[index] = currentPlayer.getPlayerMarker();
+    message.textContent = "";
 
-      if (playAgainstComputer && currentPlayer === player1) {
-        currentPlayer = computerPlayer;
-        if (!computerHasMoved) {
-          message.textContent = "";
-          computerHasMoved = true;
-        }
-        makeComputerMove();
-      } else {
-        currentPlayer = currentPlayer === player1 ? player2 : player1;
-      }
+    clickedElement.textContent = currentPlayer.getPlayerMarker();
+    if (checkWinningCondition(gameSpace, currentPlayer) === 1) {
+      message.textContent = `Player ${currentPlayer.getPlayerNumber()} has won the game!`;
+      gameOver = true;
+      return;
+    }
+    if (playAgainstComputer && currentPlayer === player1) {
+      currentPlayer = computerPlayer;
+      makeComputerMove();
+    } else {
+      currentPlayer = currentPlayer === player1 ? player2 : player1;
+    }
+    if (checkTie()) {
+      message.textContent = "It's a tie!";
+      gameOver = true;
+      return;
     }
   }
 });
+
+const checkTie = () => {
+  return gameSpace.every((value) => value !== "");
+};
+
 // my eventlistener that runs when the gamespace is clicked. Listens for a click and targets the
 // element clicked, puts that target in a variable, identifies it by its number, seperates its name
 // from its number in with the split method (which splits it into two arrays)
@@ -204,7 +217,7 @@ gameboard.addEventListener("click", function (event) {
 // our global array "gameSpace". If index matches an empty string value for gameSpace, we change
 // gameSpace at that index to match currentPlayer's marker type with currentPlayer.getPlayerMarker()
 // and we also change the textContent inside to match. we then change currentplayer from whichever
-// player it was to the other player with a simple ternery operator
+// player it was to the other player with a simple ternery operator. refactored to also determine game state as checkwinningcondition needed to be kept pure for impossible computer's use of minimax
 resetButton.addEventListener("click", function () {
   resetGameState();
 });
@@ -219,13 +232,9 @@ playImpossibleButton.addEventListener("click", function () {
 
 playComputerButton.addEventListener("click", function () {
   playAgainstComputer = true;
-  impossibleMode = false
+  impossibleMode = false;
   currentPlayer = player1;
-  if (message.textContent !== "Playing against the computer. Your turn!") {
-    message.textContent = "Playing against the computer. Your turn!";
-  } else {
-    message.textContent = "";
-  }
+  message.textContent = "Playing against the computer. Your turn!";
   resetGameState();
 });
 
@@ -233,7 +242,7 @@ const playHumanButton = document.getElementById("play-human-button");
 playHumanButton.addEventListener("click", function () {
   playAgainstComputer = false;
   computerHasMoved = false;
-  message.textContent = "";
+  message.textContent = "Playing against another Human, my bet is on them";
   resetGameState();
 });
 

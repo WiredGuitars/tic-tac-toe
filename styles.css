@@ -44,3 +44,22 @@ body {
   margin-top: 20px;
   font-size: 30px;
 }
+#buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+button {
+  border-radius: 1rem;
+  border: none;
+  height: 3rem;
+  min-width: 4rem;
+  background-color: rgb(63, 175, 228);
+  color: white;
+}
+button:hover {
+  transform: scale(1.1);
+}
+button:active {
+  transform: scale(1.05);
+}

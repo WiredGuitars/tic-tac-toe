@@ -87,6 +87,7 @@ const minimax = (board, depth, isMaximizing) => {
   const winner = checkWinningCondition(board, computerPlayer);
   // check if there is a winner
   const availableMoves = getAvailableMoves(board);
+  
 // get assign available moves to a new variable (as an array of empty strings)
   if (winner === 1) {
     return 100 - depth; // Adjust the score based on depth

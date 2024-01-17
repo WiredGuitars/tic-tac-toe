@@ -220,6 +220,8 @@ const checkTie = () => {
 // player it was to the other player with a simple ternery operator. refactored to also determine game state as checkwinningcondition needed to be kept pure for impossible computer's use of minimax
 resetButton.addEventListener("click", function () {
   resetGameState();
+  message.textContent = "Let's run that back right quick"
+
 });
 
 playImpossibleButton.addEventListener("click", function () {
